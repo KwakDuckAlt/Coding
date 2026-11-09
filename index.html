@@ -1670,11 +1670,11 @@ function renderInput(b, part) {
   } else if (kind === 'color') {
     inp = el('input'); inp.type = 'color'; inp.value = /^#[0-9a-f]{6}$/i.test(val) ? val : (spec[1] || '#ff0000'); inp.addEventListener('input', () => { (b.i = b.i || {})[part.arg] = inp.value; }); inp.addEventListener('change', () => setV(inp.value));
   } else {
-    inp = el('input'); inp.type = 'text'; inp.value = val === undefined ? (spec[1] === undefined ? '' : spec[1]) : val; if (part.hint) inp.placeholder = part.hint; if (kind === 'num') inp.inputMode = 'decimal';
+    inp = el('input'); inp.type = 'text'; inp.value = val === undefined ? (spec[1] === undefined ? '' : spec[1]) : val; if (part.hint) inp.placeholder = part.hint; if (kind === 'num') { inp.inputMode = 'text'; inp.enterKeyHint = 'done'; inp.autocomplete = 'off'; } /* 'decimal' keypads on phones have no minus key */
     inp.size = Math.max(2, Math.min(24, String(inp.value).length + 1)); wrap.classList.add(kind === 'num' ? 'numin' : 'strin');
     if (menu && datalistOptions(menu)) { const id = 'dl_' + menu; let dl = document.getElementById(id); if (!dl) { dl = el('datalist'); dl.id = id; document.body.appendChild(dl); } dl.innerHTML = datalistOptions(menu).map(x => `<option value="${esc(x)}">`).join(''); inp.setAttribute('list', id); }
-    inp.addEventListener('input', () => { inp.size = Math.max(2, Math.min(24, inp.value.length + 1)); (b.i = b.i || {})[part.arg] = kind === 'num' && inp.value.trim() !== '' && isFinite(Number(inp.value)) ? Number(inp.value) : inp.value; });
-    inp.addEventListener('change', () => setV(kind === 'num' && inp.value.trim() !== '' && isFinite(Number(inp.value)) ? Number(inp.value) : inp.value));
+    inp.addEventListener('input', () => { if (kind === 'num' && /[−–—－]/.test(inp.value)) inp.value = inp.value.replace(/[−–—－]/g, '-'); inp.size = Math.max(2, Math.min(24, inp.value.length + 1)); (b.i = b.i || {})[part.arg] = kind === 'num' && inp.value.trim() !== '' && isFinite(Number(inp.value)) ? Number(inp.value) : inp.value; });
+    inp.addEventListener('change', () => { if (kind === 'num') inp.value = inp.value.replace(/[−–—－]/g, '-'); setV(kind === 'num' && inp.value.trim() !== '' && isFinite(Number(inp.value)) ? Number(inp.value) : inp.value); });
     inp.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') inp.blur(); });
   }
   inp.addEventListener('pointerdown', ev => ev.stopPropagation()); inp.addEventListener('click', ev => ev.stopPropagation()); wrap.appendChild(inp); return wrap;
